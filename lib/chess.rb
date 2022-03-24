@@ -9,11 +9,80 @@ class Board
   end
 
   def set_board
+    self.set_white_pawn
+    self.set_black_pawn
+    self.set_white_rook
+    self.set_black_rook
+    self.set_white_knight
+    self.set_black_knight
+    self.set_white_bishop
+    self.set_black_bishop
+    self.set_white_queen
+    self.set_black_queen
+    self.set_white_king
+    self.set_black_king
+  end
+
+  def set_white_pawn
     i = 0
     while i < 8
       self.set_space_white(6, i, Pawn)
       i += 1
     end
+  end
+
+  def set_black_pawn
+    i = 0
+    while i < 8
+      self.set_space_black(1, i, Pawn)
+      i += 1
+    end
+  end
+
+  def set_white_rook
+    self.set_space_white(7, 0, Rook)
+    self.set_space_white(7, 7, Rook)
+  end
+
+  def set_black_rook
+    self.set_space_black(0, 0, Rook)
+    self.set_space_black(0, 7, Rook)
+  end
+
+  def set_white_knight
+    self.set_space_white(7, 1, Knight)
+    self.set_space_white(7, 6, Knight)
+  end
+
+  def set_black_knight
+    self.set_space_black(0, 1, Knight)
+    self.set_space_black(0, 6, Knight)
+  end
+
+  def set_white_bishop 
+    self.set_space_white(7, 2, Bishop)
+    self.set_space_white(7, 5, Bishop)
+  end
+
+  def set_black_bishop 
+    self.set_space_black(0, 2, Bishop)
+    self.set_space_black(0, 5, Bishop)
+  end
+
+  def set_white_queen
+    self.set_space_white(7, 3, Queen)
+  end
+
+  def set_black_queen
+    self.set_space_black(0, 3, Queen)
+  end
+
+  def set_white_king
+    self.set_space_white(7, 4, King)
+  end
+
+  def set_black_king
+    self.set_space_black(0, 4, King)
   end
 
   def draw_board
@@ -22,18 +91,20 @@ class Board
       print "\n"}
   end
 
-  def draw_board_index
-    @spaces.each { |x| 
-      x.each_with_index { |y| print "| #{y.occupant.class}|"}
-      print "\n"}
-  end
-
   def set_space_white(x, y, occupant)
     @spaces[x][y].set_occupant(occupant.new("white", [x, y]))
   end
 
+  def set_space_black(x, y, occupant)
+    @spaces[x][y].set_occupant(occupant.new("black", [x, y]))
+  end
+
   def space(x, y)
     @spaces[x][y]
+  end
+
+  def check_space(x, y)
+    if 
   end
 
   def spaces
@@ -53,18 +124,36 @@ class Space
   def draw_space
     if occupant.class == NilClass
       return " "
-    elsif occupant.class == King
-      return "♔"
-    elsif occupant.class == Queen
-      return "♕"
-    elsif occupant.class == Bishop
-      return "♗"
-    elsif occupant.class == Knight
-      return "♘"
-    elsif occupant.class == Rook
-      return "♖"
-    elsif occupant.class == Pawn
-      return "♙"
+    end
+    if occupant.color == "white"
+      if occupant.class == King
+        return "♚"
+      elsif occupant.class == Queen
+        return "♛"
+      elsif occupant.class == Bishop
+        return "♝"
+      elsif occupant.class == Knight
+        return "♞"
+      elsif occupant.class == Rook
+        return "♜"
+      elsif occupant.class == Pawn
+        return "♟"
+      end
+    end
+    if occupant.color == "black"
+      if occupant.class == King
+        return "♔"
+      elsif occupant.class == Queen
+        return "♕"
+      elsif occupant.class == Bishop
+        return "♗"
+      elsif occupant.class == Knight
+        return "♘"
+      elsif occupant.class == Rook
+        return "♖"
+      elsif occupant.class == Pawn
+        return "♙"
+      end
     end
   end
 
@@ -78,40 +167,45 @@ class Space
 
 end
 
-class Pawn
+class Piece
 
-  attr_accessor :color, :position
+  def check_space(x, y)
 
-  def initialize(color, position)
-    @color = color
-    @position = position
   end
 
 end
 
-class Rook
+class Pawn < Piece
 
-  attr_accessor :color, :position
-  
+  attr_accessor :color, :position :first_move
+
   def initialize(color, position)
     @color = color
     @position = position
+  end
+
+  def color
+    @color
   end
 
 end
 
-class Knight
+class Rook < Piece
 
   attr_accessor :color, :position
   
   def initialize(color, position)
     @color = color
     @position = position
+  end
+
+  def color
+    @color
   end
 
 end
 
-class Bishop 
+class Knight < Piece
 
   attr_accessor :color, :position
   
@@ -119,21 +213,29 @@ class Bishop
     @color = color
     @position = position
   end
-  
-end
 
-class Queen
-
-  attr_accessor :color, :position
-  
-  def initialize(color, position)
-    @color = color
-    @position = position
+  def color
+    @color
   end
 
 end
 
-class King
+class Bishop < Piece
+
+  attr_accessor :color, :position
+  
+  def initialize(color, position)
+    @color = color
+    @position = position
+  end
+  
+  def color
+    @color
+  end
+
+end
+
+class Queen < Piece
 
   attr_accessor :color, :position
   
@@ -142,13 +244,30 @@ class King
     @position = position
   end
 
+  def color
+    @color
+  end
+
+end
+
+class King < Piece
+
+  attr_accessor :color, :position
   
+  def initialize(color, position)
+    @color = color
+    @position = position
+  end
+
+  def color
+    @color
+  end
 
 end
 
 
 board = Board.new
-board.draw_board
+# board.draw_board
 
 # queen = Queen.new("black", [2, 0])
 # p queen.class
