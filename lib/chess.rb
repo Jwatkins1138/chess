@@ -86,9 +86,11 @@ class Board
   end
 
   def draw_board
-    @spaces.each { |x| 
-      x.each { |y| print "|#{y.draw_space}|"}
-      print "\n"}
+    @spaces.each_with_index { |x, i|
+      print i 
+      x.each { |y| print "|#{y.draw_space}"}
+      print "|\n"}
+      puts "  0 1 2 3 4 5 6 7"
   end
 
   def set_space_white(x, y, occupant)
@@ -104,7 +106,11 @@ class Board
   end
 
   def check_space(x, y)
-    if 
+    if @spaces[x][y].occupant
+      return @spaces[x][y].occupant.color
+    else
+      return nil
+    end
   end
 
   def spaces
@@ -177,7 +183,7 @@ end
 
 class Pawn < Piece
 
-  attr_accessor :color, :position :first_move
+  attr_accessor :color, :position, :first_move
 
   def initialize(color, position)
     @color = color
@@ -186,6 +192,18 @@ class Pawn < Piece
 
   def color
     @color
+  end
+
+end
+
+class EnPassant < Piece
+
+  attr_accessor :pawn, :position, :active
+
+  def initialize(pawn, position)
+    @pawn = pawn
+    @position = position
+    @active = true
   end
 
 end
@@ -252,7 +270,7 @@ end
 
 class King < Piece
 
-  attr_accessor :color, :position
+  attr_accessor :color, :position, :potential
   
   def initialize(color, position)
     @color = color
@@ -261,6 +279,10 @@ class King < Piece
 
   def color
     @color
+  end
+
+  def calculate_moves
+
   end
 
 end
