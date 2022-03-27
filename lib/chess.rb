@@ -107,6 +107,23 @@ class Board
       puts "  0 1 2 3 4 5 6 7"
   end
 
+  def check_board
+    @spaces.each { |x|
+    x.each { |y|
+      if @spaces[x][y].en_passant
+        @spaces[x][y].counter_set
+        if @spaces[x][y].en_passant_counter >= 2
+          @spaces[x][y].set_en_passant(nil)
+        end
+      end
+      if self.check_moves(x, y).include?(@white_king.position)
+        self.set_white_check
+      elsif self.check_moves(x, y).include?(@black_king.position)
+        self.set_black_check
+      end
+    }}
+  end
+
   def set_space_white(x, y, occupant)
     @spaces[x][y].set_occupant(occupant.new("white", [x, y]))
   end
@@ -269,6 +286,14 @@ class Space
     @en_passant = pawn
   end
 
+  def en_passant_counter
+    @en_passant_counter
+  end
+
+  def counter_set
+    @en_passant_counter += 1
+  end
+
   def en_passant
     @en_passant
   end
@@ -294,13 +319,13 @@ class Piece
     @position = [x, y]
   end
 
-  # def diagonal_path
-    # x = @position[0]
-    # y = @position[1]
-    # if spaces[x][y - 1] && spaces[x][y - 1].occupant == nil || spaces[x][y - 1].occupant.color != @color 
-      # moves.push([x, y -1])
-    # end
-  # end
+  def diagonal_path
+    x = @position[0]
+    y = @position[1]
+    if spaces[x][y - 1] && spaces[x][y - 1].occupant == nil || spaces[x][y - 1].occupant.color != @color 
+      moves.push([x, y -1])
+    end
+  end
 
 end
 
