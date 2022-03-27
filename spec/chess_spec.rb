@@ -58,10 +58,35 @@ describe Board do
         expect(moves).to contain_exactly([5, 5], [6, 6], [7, 7], [3, 3], [2, 2], [1, 1], [0, 0], [5, 3], [6, 2], [7, 1], [3, 5], [2, 6], [1, 7])
       end
 
-      it "returns pawns moves" do
+      it "returns a rooks moves" do
+        board.set_space_white(4, 4, Rook)
+        moves = board.check_moves(4, 4)
+        expect(moves).to contain_exactly([4, 5], [4, 6], [4, 7], [4, 3], [4, 2], [4, 1], [4, 0], [0, 4], [1, 4], [2, 4], [3, 4], [5, 4], [6, 4], [7, 4])
+      end
+
+      it "returns a rooks moves when a teammate is in the way" do
+        board.set_space_white(4, 4, Rook)
+        board.set_space_white(4, 5, Pawn)
+        moves = board.check_moves(4, 4)
+        expect(moves).to contain_exactly([4, 3], [4, 2], [4, 1], [4, 0], [0, 4], [1, 4], [2, 4], [3, 4], [5, 4], [6, 4], [7, 4])
+      end
+
+      it "returns a queens moves" do
+        board.set_space_white(4, 4, Queen)
+        moves = board.check_moves(4, 4)
+        expect(moves).to contain_exactly([4, 5], [4, 6], [4, 7], [4, 3], [4, 2], [4, 1], [4, 0], [0, 4], [1, 4], [2, 4], [3, 4], [5, 4], [6, 4], [7, 4], [5, 5], [6, 6], [7, 7], [3, 3], [2, 2], [1, 1], [0, 0], [5, 3], [6, 2], [7, 1], [3, 5], [2, 6], [1, 7])
+      end
+
+      it "returns a pawns moves" do
         board.set_space_white(6, 4, Pawn)
         moves = board.check_moves(6, 4)
         expect(moves).to include([5, 4])
+      end
+
+      it "returns a knights moves" do
+        board.set_space_white(4, 4, Knight)
+        moves = board.check_moves(4, 4)
+        expect(moves).to contain_exactly([5, 6], [6, 5], [5, 2], [6, 3], [2, 3], [3, 2], [2, 5], [3, 6])
       end
 
       it "sets occupant to nil at a space after move" do
