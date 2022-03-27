@@ -52,10 +52,32 @@ describe Board do
         expect(moves).to include([4, 5], [5, 5], [5, 4], [3, 5], [3, 4], [3, 3], [5, 3], [4, 3])
       end
 
+      it "returns a bishops moves" do
+        board.set_space_white(4, 4, Bishop)
+        moves = board.check_moves(4, 4)
+        expect(moves).to contain_exactly([5, 5], [6, 6], [7, 7], [3, 3], [2, 2], [1, 1], [0, 0], [5, 3], [6, 2], [7, 1], [3, 5], [2, 6], [1, 7])
+      end
+
       it "returns pawns moves" do
         board.set_space_white(6, 4, Pawn)
         moves = board.check_moves(6, 4)
         expect(moves).to include([5, 4])
+      end
+
+      it "sets occupant to nil at a space after move" do
+        board.set_board
+        board.move_piece(0, 4, 3, 4)
+        occupant = board.spaces[0][4].occupant
+        expect(occupant).to eq(nil)
+      end
+
+      it "triggers check when moves contain a kings position" do
+        board.set_board
+        board.move_piece(0, 4, 3, 4)
+        board.move_piece(6, 4, 4, 4)
+        board.check_board
+        check_black = board.check_black
+        expect(check_black).to eq(true)
       end
     end
 
