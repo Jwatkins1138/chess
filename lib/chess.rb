@@ -118,10 +118,39 @@ class Board
       end
       if @spaces[xi][yi].occupant && self.check_moves(xi, yi).include?(@white_king.position)
         self.set_check_white
+        p "white king is in check"
       elsif @spaces[xi][yi].occupant && self.check_moves(xi, yi).include?(@black_king.position)
         self.set_check_black
+        p "black king is in check"
       end
     }}
+  end
+
+  def promotion(pawn)
+    x = pawn.location[0]
+    y = pawn.location[1]
+    color = pawn.color
+    puts "pawn has been promoted, select replacement: "
+    puts "1. Queen"
+    puts "2. Bishop"
+    puts "3. Knight"
+    puts "4. Rook"
+    choice = gets.chomp.to_i
+    until (1..4).include?(choice)
+      puts "please enter a valid choice: "
+      choice = gets.chomp.to_i
+    end
+    case choice
+    when 1
+      @spaces[x][y].set_occupant(Queen.new(color, [x, y]))
+    when 2
+      @spaces[x][y].set_occupant(Bishop.new(color, [x, y]))
+    when 3
+      @spaces[x][y].set_occupant(Knight.new(color, [x, y]))
+    when 4
+      @spaces[x][y].set_occupant(Rook.new(color, [x, y]))
+    end
+
   end
 
   def check_white
@@ -153,10 +182,18 @@ class Board
   end
 
   def move_piece(x, y, xd, yd)
-    if @spaces[x][y].occupant.class == Pawn && @spaces[x][y].occupant.first_move
-      @spaces[x][y].occupant.set_first_move
-      if x - xd > 1
-        @spaces[(x+xd)/2][y].set_en_passant(@spaces[x][y].occupant)
+    if @spaces[x][y].occupant.class == Pawn
+      if @spaces[x][y].occupant.color == "black" && x == 7
+        self.promotion(@spaces[x][y].occupant)
+      end
+      if @spaces[x][y].occupant.color == "white" && x == 0
+        self.promotion(@spaces[x][y].occupant)
+      end
+      if @spaces[x][y].occupant.first_move
+        @spaces[x][y].occupant.set_first_move
+        if x - xd > 1
+          @spaces[(x+xd)/2][y].set_en_passant(@spaces[x][y].occupant)
+        end
       end
     end 
     @spaces[xd][yd].occupant = @spaces[x][y].occupant
@@ -408,6 +445,70 @@ class Piece
     moves
   end
 
+  def vertical_path_one(spaces, moves)
+    x = @position[0]
+    y = @position[1]
+    while (0..7).include?(x) && (0..7).include?(y + 1)
+      if spaces[x][y + 1].occupant == nil || spaces[x][y + 1].occupant.color != @color 
+        moves.push([x, y + 1])
+      end
+      if spaces[x][y + 1].occupant == nil
+        y += 1
+      else
+        break
+      end
+    end
+    moves
+  end
+
+  def vertical_path_two(spaces, moves)
+    x = @position[0]
+    y = @position[1]
+    while (0..7).include?(x) && (0..7).include?(y - 1)
+      if spaces[x][y - 1].occupant == nil || spaces[x][y - 1].occupant.color != @color 
+        moves.push([x, y - 1])
+      end
+      if spaces[x][y - 1].occupant == nil
+        y -= 1
+      else
+        break
+      end
+    end
+    moves
+  end
+
+  def horizontal_path_one(spaces, moves)
+    x = @position[0]
+    y = @position[1]
+    while (0..7).include?(x + 1) && (0..7).include?(y)
+      if spaces[x + 1][y].occupant == nil || spaces[x + 1][y].occupant.color != @color 
+        moves.push([x + 1, y])
+      end
+      if spaces[x + 1][y].occupant == nil
+        x += 1
+      else
+        break
+      end
+    end
+    moves
+  end
+
+  def horizontal_path_two(spaces, moves)
+    x = @position[0]
+    y = @position[1]
+    while (0..7).include?(x - 1) && (0..7).include?(y)
+      if spaces[x - 1][y].occupant == nil || spaces[x - 1][y].occupant.color != @color 
+        moves.push([x - 1, y])
+      end
+      if spaces[x - 1][y].occupant == nil
+        x -= 1
+      else
+        break
+      end
+    end
+    moves
+  end
+
 end
 
 class Pawn < Piece
@@ -484,6 +585,10 @@ class Rook < Piece
 
   def calculate_moves(spaces)
     moves = Array.new
+    moves = self.vertical_path_one(spaces, moves)
+    moves = self.vertical_path_two(spaces, moves)
+    moves = self.horizontal_path_one(spaces, moves)
+    moves = self.horizontal_path_two(spaces, moves)
     moves
 
   end
@@ -496,6 +601,48 @@ class Knight < Piece
 
   def calculate_moves(spaces)
     moves = Array.new
+    x = position[0]
+    y = position[1]
+    if (0..7).include?(x + 2) && (0..7).include?(y - 1)
+      if spaces[x + 2][y - 1].occupant == nil || spaces[x + 2][y - 1].occupant.color != @color
+        moves.push([x + 2, y - 1])
+      end
+    end
+    if (0..7).include?(x + 1) && (0..7).include?(y - 2)
+      if spaces[x + 1][y - 2].occupant == nil || spaces[x + 1][y - 2].occupant.color != @color
+        moves.push([x + 1, y - 2])
+      end
+    end
+    if (0..7).include?(x - 2) && (0..7).include?(y - 1)
+      if spaces[x - 2][y - 1].occupant == nil || spaces[x - 2][y - 1].occupant.color != @color
+        moves.push([x - 2, y - 1])
+      end
+    end
+    if (0..7).include?(x - 1) && (0..7).include?(y - 2)
+      if spaces[x - 1][y - 2].occupant == nil || spaces[x - 1][y - 2].occupant.color != @color
+        moves.push([x - 1, y - 2])
+      end
+    end
+    if (0..7).include?(x + 2) && (0..7).include?(y + 1)
+      if spaces[x + 2][y + 1].occupant == nil || spaces[x + 2][y + 1].occupant.color != @color
+        moves.push([x + 2, y + 1])
+      end
+    end
+    if (0..7).include?(x + 1) && (0..7).include?(y + 2)
+      if spaces[x + 1][y + 2].occupant == nil || spaces[x + 1][y + 2].occupant.color != @color
+        moves.push([x + 1, y + 2])
+      end
+    end
+    if (0..7).include?(x - 2) && (0..7).include?(y + 1)
+      if spaces[x - 2][y + 1].occupant == nil || spaces[x - 2][y + 1].occupant.color != @color
+        moves.push([x - 2, y + 1])
+      end
+    end
+    if (0..7).include?(x - 1) && (0..7).include?(y + 2)
+      if spaces[x - 1][y + 2].occupant == nil || spaces[x - 1][y + 2].occupant.color != @color
+        moves.push([x - 1, y + 2])
+      end
+    end
     moves
   end
   
@@ -522,6 +669,14 @@ class Queen < Piece
 
   def calculate_moves(spaces)
     moves = Array.new
+    moves = self.diagonal_path_one(spaces, moves)
+    moves = self.diagonal_path_two(spaces, moves)
+    moves = self.diagonal_path_three(spaces, moves)
+    moves = self.diagonal_path_four(spaces, moves)
+    moves = self.vertical_path_one(spaces, moves)
+    moves = self.vertical_path_two(spaces, moves)
+    moves = self.horizontal_path_one(spaces, moves)
+    moves = self.horizontal_path_two(spaces, moves)
     moves
   end
 
@@ -590,13 +745,15 @@ board = Board.new
 # end
 # p board.space(0, 0).draw_space
 
-# board.set_board
-# i = 0
-# while i < 10
-#   board.draw_board
-#   board.white_move
-#   board.draw_board
-#   board.black_move
-#   i += 1
-# end
+board.set_board
+i = 0
+while i < 100
+  board.draw_board
+  board.white_move
+  board.check_board
+  board.draw_board
+  board.black_move
+  board.check_board
+  i += 1
+end
 
