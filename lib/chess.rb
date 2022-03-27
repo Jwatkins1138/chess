@@ -108,20 +108,36 @@ class Board
   end
 
   def check_board
-    @spaces.each { |x|
-    x.each { |y|
-      if @spaces[x][y].en_passant
-        @spaces[x][y].counter_set
-        if @spaces[x][y].en_passant_counter >= 2
-          @spaces[x][y].set_en_passant(nil)
+    @spaces.each_with_index { |x, xi|
+    x.each_with_index { |y, yi|
+      if y.en_passant
+        y.counter_set
+        if y.en_passant_counter >= 2
+          y.set_en_passant(nil)
         end
       end
-      if self.check_moves(x, y).include?(@white_king.position)
-        self.set_white_check
-      elsif self.check_moves(x, y).include?(@black_king.position)
-        self.set_black_check
+      if @spaces[xi][yi].occupant && self.check_moves(xi, yi).include?(@white_king.position)
+        self.set_check_white
+      elsif @spaces[xi][yi].occupant && self.check_moves(xi, yi).include?(@black_king.position)
+        self.set_check_black
       end
     }}
+  end
+
+  def check_white
+    @check_white
+  end
+
+  def set_check_white
+    @check_white = true
+  end
+
+  def check_black
+    @check_black
+  end
+
+  def set_check_black
+    @check_black = true
   end
 
   def set_space_white(x, y, occupant)
@@ -141,13 +157,18 @@ class Board
       @spaces[x][y].occupant.set_first_move
       if x - xd > 1
         @spaces[(x+xd)/2][y].set_en_passant(@spaces[x][y].occupant)
-      # elsif @spaces[x][y].occupant.color == "black" && xd - x > 1
-      #   self.set_space_black((x+xd)/2, y, EnPassant)
       end
     end 
     @spaces[xd][yd].occupant = @spaces[x][y].occupant
     @spaces[x][y].occupant = nil
-    
+    @spaces[xd][yd].occupant.set_position(xd, yd)
+    if @spaces[xd][yd].occupant.class == King
+      if @spaces[xd][yd].occupant.color == "white"
+        @white_king = @spaces[xd][yd].occupant
+      elsif @spaces[xd][yd].occupant.color == "black"
+        @black_king = @spaces[xd][yd].occupant
+      end
+    end
   end
 
   def check_space(x, y)
@@ -287,11 +308,11 @@ class Space
   end
 
   def en_passant_counter
-    @en_passant_counter
+    @passant_counter
   end
 
   def counter_set
-    @en_passant_counter += 1
+    @passant_counter += 1
   end
 
   def en_passant
@@ -319,12 +340,72 @@ class Piece
     @position = [x, y]
   end
 
-  def diagonal_path
+  def diagonal_path_one(spaces, moves)
     x = @position[0]
     y = @position[1]
-    if spaces[x][y - 1] && spaces[x][y - 1].occupant == nil || spaces[x][y - 1].occupant.color != @color 
-      moves.push([x, y -1])
+    while (0..7).include?(x - 1) && (0..7).include?(y - 1)
+      if spaces[x - 1][y - 1].occupant == nil || spaces[x - 1][y - 1].occupant.color != @color 
+        moves.push([x - 1, y - 1])
+      end
+      if spaces[x - 1][y - 1] && spaces[x - 1][y - 1].occupant == nil
+        x -= 1
+        y -= 1
+      else
+        break
+      end
     end
+    moves
+  end
+
+  def diagonal_path_two(spaces, moves)
+    x = @position[0]
+    y = @position[1]
+    while (0..7).include?(x + 1) && (0..7).include?(y - 1)
+      if spaces[x + 1][y - 1].occupant == nil || spaces[x + 1][y - 1].occupant.color != @color 
+        moves.push([x + 1, y - 1])
+      end
+      if spaces[x + 1][y - 1].occupant == nil
+        x += 1
+        y -= 1
+      else
+        break
+      end
+    end
+    moves
+  end
+
+  def diagonal_path_three(spaces, moves)
+    x = @position[0]
+    y = @position[1]
+    while (0..7).include?(x + 1) && (0..7).include?(y + 1)
+      if spaces[x + 1][y + 1].occupant == nil || spaces[x + 1][y + 1].occupant.color != @color 
+        moves.push([x + 1, y + 1])
+      end
+      if spaces[x + 1][y + 1].occupant == nil
+        x += 1
+        y += 1
+      else
+        break
+      end
+    end
+    moves
+  end
+
+  def diagonal_path_four(spaces, moves)
+    x = @position[0]
+    y = @position[1]
+    while (0..7).include?(x - 1) && (0..7).include?(y + 1)
+      if spaces[x - 1][y + 1].occupant == nil || spaces[x - 1][y + 1].occupant.color != @color 
+        moves.push([x - 1, y + 1])
+      end
+      if spaces[x - 1][y + 1].occupant == nil
+        x -= 1
+        y += 1
+      else
+        break
+      end
+    end
+    moves
   end
 
 end
@@ -400,12 +481,23 @@ end
 class Rook < Piece
 
   attr_accessor :color, :position
+
+  def calculate_moves(spaces)
+    moves = Array.new
+    moves
+
+  end
   
 end
 
 class Knight < Piece
 
   attr_accessor :color, :position
+
+  def calculate_moves(spaces)
+    moves = Array.new
+    moves
+  end
   
 end
 
@@ -413,11 +505,26 @@ class Bishop < Piece
 
   attr_accessor :color, :position
 
+  def calculate_moves(spaces)
+    moves = Array.new
+    moves = self.diagonal_path_one(spaces, moves)
+    moves = self.diagonal_path_two(spaces, moves)
+    moves = self.diagonal_path_three(spaces, moves)
+    moves = self.diagonal_path_four(spaces, moves)
+    moves
+  end
+
 end
 
 class Queen < Piece
 
   attr_accessor :color, :position
+
+  def calculate_moves(spaces)
+    moves = Array.new
+    moves
+  end
+
 
 end
 
@@ -492,3 +599,4 @@ board = Board.new
 #   board.black_move
 #   i += 1
 # end
+
