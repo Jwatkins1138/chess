@@ -1,11 +1,91 @@
+
+
+class Chess
+
+  def new_game
+    game_on = true
+    board = Board.new
+    board.set_board
+    while game_on
+      board.draw_board
+      board.white_move
+      board.check_board
+      if board.check_mate_black
+        board.draw_board
+        game_on = false
+        break
+      end
+      board.draw_board
+      board.black_move
+      board.check_board
+      if board.check_mate_white
+        board.draw_board
+        game_on = false
+        break
+      end
+    end
+  end
+
+  def save_game
+
+  end
+
+  def load_game
+    game_on = true
+    board = Board.new(spaces)
+    board.set_board
+    while game_on
+      board.draw_board
+      board.white_move
+      board.check_board
+      if board.check_mate_black
+        board.draw_board
+        game_on = false
+        break
+      end
+      board.draw_board
+      board.black_move
+      board.check_board
+      if board.check_mate_white
+        board.draw_board
+        game_on = false
+        break
+      end
+    end
+  end
+
+  def run_chess
+    puts" 
+    ░█████╗░██╗░░██╗███████╗░██████╗░██████╗
+    ██╔══██╗██║░░██║██╔════╝██╔════╝██╔════╝
+    ██║░░╚═╝███████║█████╗░░╚█████╗░╚█████╗░
+    ██║░░██╗██╔══██║██╔══╝░░░╚═══██╗░╚═══██╗
+    ╚█████╔╝██║░░██║███████╗██████╔╝██████╔╝
+    ░╚════╝░╚═╝░░╚═╝╚══════╝╚═════╝░╚═════╝░
+                by Jason Watkins             "
+    puts "1. new game"
+    puts "2. load game"
+    choice = gets.chomp.to_i
+    until (1..2).include?(choice)
+      puts "please enter a valid choice: "
+      choice = gets.chomp.to_i
+    end
+    if choice == 1
+      self.new_game
+    end         
+  end
+end
+
 class Board
 
   attr_accessor :spaces, :check_white, :check_mate_white, :check_black, :check_mate_black, :white_king, :black_king
 
-  def initialize
-    @spaces = Array.new(8)
-    @spaces.map! { |x| x = Array.new(8) }
-    @spaces.each { |x| x.map! { |y| y = Space.new } }
+  def initialize(spaces = Array.new(8))
+    @spaces = spaces
+    if @spaces[0].class != Array
+      @spaces.map! { |x| x = Array.new(8) }
+      @spaces.each { |x| x.map! { |y| y = Space.new } }
+    end
     @check_white = false
     @check_mate_white = false
     @check_black = false
@@ -118,13 +198,81 @@ class Board
       end
       if @spaces[xi][yi].occupant && self.check_moves(xi, yi).include?(@white_king.position)
         self.set_check_white
-        p "white king is in check"
+        kings_moves = self.check_moves(@white_king.position[0], @white_king.position[1])
+        i = 0
+        safe_counter = 0
+        unsafe_counter = 0
+        while i < kings_moves.length
+          if self.eval_checkmate(@white_king.position[0], @white_king.position[1], kings_moves[i][0], kings_moves[i][1])
+            unsafe_counter += 1
+          else
+            safe_counter += 1
+          end
+          i += 1
+        end
+        if safe_counter == 0
+          self.set_checkmate_white
+          p "checkmate white, black wins"
+        else
+          p "white king is in check"
+        end
       elsif @spaces[xi][yi].occupant && self.check_moves(xi, yi).include?(@black_king.position)
         self.set_check_black
-        p "black king is in check"
+        kings_moves = self.check_moves(@black_king.position[0], @black_king.position[1])
+        i = 0
+        safe_counter = 0
+        unsafe_counter = 0
+        while i < kings_moves.length
+          if self.eval_checkmate(@black_king.position[0], @black_king.position[1], kings_moves[i][0], kings_moves[i][1])
+            unsafe_counter += 1
+          else
+            safe_counter += 1
+          end
+          i += 1
+        end
+        if safe_counter == 0
+          self.set_checkmate_black
+          p "checkmate black, white wins"
+        else
+          p "black king is in check"
+        end
       end
     }}
   end
+
+  def clone_board
+    clone_spaces = Array.new(8)
+    clone_spaces.map! { |x| x = Array.new(8) }
+    clone_spaces.each { |x| x.map! { |y| y = Space.new } }
+    @spaces.each_with_index { |x, xi|
+    x.each_with_index { |y, yi| 
+      if y.occupant
+        clone_type = y.occupant.class
+        clone_color = y.occupant.color
+        clone_spaces[xi][yi].set_occupant(clone_type.new(clone_color, [xi, yi]))
+      end
+    }}
+    clone_spaces
+  end
+
+  def eval_checkmate(x, y, xd, yd)
+    test_spaces = self.clone_board
+    test_board = Board.new(test_spaces)
+    test_board.move_piece(x, y, xd, yd)
+    unsafe = 0
+    test_board.spaces.each_with_index { |tx, txi|
+      tx.each_with_index { |ty, tyi|
+      if test_board.spaces[txi][tyi].occupant && test_board.check_moves(txi, tyi).include?([xd, yd])
+        unsafe += 1
+      end
+    }}
+    if unsafe > 0
+      return true
+    else
+      return false
+    end
+  end
+
 
   def promotion(pawn)
     x = pawn.location[0]
@@ -153,20 +301,42 @@ class Board
 
   end
 
+  def capture_en_passant(pawn)
+    x = pawn.location[0]
+    y = pawn.location[1]
+    @spaces[x][y].occupant = nil
+  end
+
   def check_white
     @check_white
+  end
+
+  def check_mate_white
+    @check_mate_white
   end
 
   def set_check_white
     @check_white = true
   end
 
+  def set_checkmate_white
+    @check_mate_white = true
+  end
+
   def check_black
     @check_black
   end
 
+  def check_mate_black
+    @check_mate_black
+  end
+
   def set_check_black
     @check_black = true
+  end
+
+  def set_checkmate_black
+    @check_mate_black = true
   end
 
   def set_space_white(x, y, occupant)
@@ -194,6 +364,9 @@ class Board
         if x - xd > 1
           @spaces[(x+xd)/2][y].set_en_passant(@spaces[x][y].occupant)
         end
+      end
+      if @spaces[xd][yd].en_passant
+        self.capture_en_passant(@spaces[xd][yd].en_passant)
       end
     end 
     @spaces[xd][yd].occupant = @spaces[x][y].occupant
@@ -526,23 +699,39 @@ class Pawn < Piece
     x = @position[0]
     y = @position[1]
     if @color == "white"
-      if spaces[x - 1][y] && spaces[x - 1][y].occupant == nil || spaces[x - 1][y].occupant.color != @color
-        moves.push([x - 1, y])
+      if spaces[x - 1] 
+        if spaces[x - 1][y].occupant == nil 
+          moves.push([x - 1, y])
+        end
+        if spaces[x - 1][y - 1] && spaces[x - 1][y - 1].occupant && spaces[x - 1][y - 1].occupant.color == "black" || spaces[x - 1][y - 1] && spaces[x - 1][y - 1].en_passant
+          moves.push([x - 1, y - 1])
+        end
+        if spaces[x - 1][y + 1] && spaces[x - 1][y + 1].occupant && spaces[x - 1][y + 1].occupant.color == "black" || spaces[x - 1][y + 1] && spaces[x - 1][y + 1].en_passant
+          moves.push([x - 1, y + 1])
+        end
       end
     end
     if @color == "black"
-      if spaces[x + 1][y] && spaces[x + 1][y].occupant == nil || spaces[x + 1][y].occupant.color != @color
-        moves.push([x + 1, y])
+      if spaces[x + 1]
+        if spaces[x + 1][y].occupant == nil 
+          moves.push([x + 1, y])
+        end
+        if spaces[x + 1][y - 1] && spaces[x + 1][y - 1].occupant && spaces[x + 1][y - 1].occupant.color == "white" || spaces[x + 1][y - 1] && spaces[x + 1][y - 1].en_passant
+          moves.push([x + 1, y - 1])
+        end
+        if spaces[x + 1][y + 1] && spaces[x + 1][y + 1].occupant && spaces[x + 1][y + 1].occupant.color == "white" || spaces[x + 1][y + 1] && spaces[x + 1][y + 1].en_passant
+          moves.push([x + 1, y + 1])
+        end
       end
     end
     if @first_move
       if @color == "white"
-        if spaces[x - 2][y] && spaces[x - 2][y].occupant == nil || spaces[x - 2][y].occupant.color != @color
+        if spaces[x - 2] && spaces[x - 2][y].occupant == nil 
           moves.push([x - 2, y])
         end
       end
       if @color == "black"
-        if spaces[x + 2][y] && spaces[x + 2][y].occupant == nil || spaces[x + 2][y].occupant.color != @color
+        if spaces[x + 2] && spaces[x + 2][y].occupant == nil 
           moves.push([x + 2, y])
         end
       end
@@ -745,15 +934,20 @@ board = Board.new
 # end
 # p board.space(0, 0).draw_space
 
-board.set_board
-i = 0
-while i < 100
-  board.draw_board
-  board.white_move
-  board.check_board
-  board.draw_board
-  board.black_move
-  board.check_board
-  i += 1
-end
+# board.set_board
+# i = 0
+# while i < 100
+#   board.draw_board
+#   board.white_move
+#   board.check_board
+#   board.draw_board
+#   board.black_move
+#   board.check_board
+#   i += 1
+# end
+
+chess = Chess.new
+chess.run_chess
+
+
 
