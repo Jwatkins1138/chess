@@ -751,26 +751,9 @@ class Pawn < Piece
   
 end
 
-class EnPassant < Piece
-
-  attr_accessor :pawn, :position, :active, :round
-
-  def initialize(pawn, position)
-    @pawn = pawn
-    @position = position
-    @round = 0
-    @active = true
-  end
-
-  def set_round
-    @round += 1
-  end
-
-end
-
 class Rook < Piece
 
-  attr_accessor :color, :position
+  attr_accessor :color, :position, :first_move
 
   def calculate_moves(spaces)
     moves = Array.new
@@ -780,6 +763,14 @@ class Rook < Piece
     moves = self.horizontal_path_two(spaces, moves)
     moves
 
+  end
+
+  def first_move
+    @first_move
+  end
+
+  def set_first_move
+    @first_move = false
   end
   
 end
@@ -874,7 +865,7 @@ end
 
 class King < Piece
 
-  attr_accessor :color, :position, :castled, :potential
+  attr_accessor :color, :position, :first_move
 
   def calculate_moves(spaces)
     moves = Array.new
@@ -912,39 +903,18 @@ class King < Piece
 
   end
 
+  def first_move
+    @first_move
+  end
+
+  def set_first_move
+    @first_move = false
+  end
+
 end
 
 
-board = Board.new
-# board.draw_board
 
-# queen = Queen.new("black", [2, 0])
-# p queen.class
-# nil_space = nil
-# p nil_space.class
-# board.set_space
-# board.draw_board
-# # p board.space(0, 0)
-# # p board.spaces
-# board.draw_board_index
-# if board.space(0, 0).occupant.class == King
-#   p "yes king"
-# else
-#   p "no king"
-# end
-# p board.space(0, 0).draw_space
-
-# board.set_board
-# i = 0
-# while i < 100
-#   board.draw_board
-#   board.white_move
-#   board.check_board
-#   board.draw_board
-#   board.black_move
-#   board.check_board
-#   i += 1
-# end
 
 chess = Chess.new
 chess.run_chess
